@@ -1,8 +1,21 @@
 # Your code here
 
-
+d = {}
 def expensive_seq(x, y, z):
-    # Your code here
+
+    k = (x, y, z)
+    res = d.get(k)
+    if res:
+        return res
+
+    if x <= 0:
+        d[k] = y + z
+        return y + z
+
+    else: 
+        res = expensive_seq(x-1, y+1, z) + expensive_seq(x-2, y+2, z*2) + expensive_seq(x-3, y+3, z*3)
+        d[k] = res
+        return res
 
 
 

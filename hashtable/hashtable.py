@@ -25,9 +25,17 @@ class HashTable:
     def __init__(self, capacity):
         assert type(capacity) is int
         assert capacity >= MIN_CAPACITY
-        self.capacity = capacity
+        self.__size = 0
+        self.__capacity = capacity
         self.__table = [None] * capacity
 
+    @property
+    def capacity(self):
+        return self.__capacity
+
+    @property
+    def size(self):
+        return self.__size
 
     def get_num_slots(self):
         """
@@ -48,7 +56,7 @@ class HashTable:
 
         Implement this.
         """
-        return len([x for x in self.__table if x != None])/len(self.__table)
+        return self.__size / self.__capacity
 
 
     def fnv1(self, key):
@@ -84,6 +92,105 @@ class HashTable:
         return self.fnv1(key) % self.capacity
         #return self.djb2(key) % self.capacity
 
+
+
+    def __getitem__(self, key):
+        """
+        """
+        index = self.hash_index(key)
+        entry = self.__table[index]
+
+        while entry is not None:
+            if entry.key == key:
+                return entry.value
+            entry = entry.next
+
+        raise ValueError(f"{key}")
+        
+
+    def __setitem__(self, key, value):
+        """
+        """
+        index = self.hash_index(key)
+        entry = self.__table[index]
+
+        if entry is None:
+            self.__table[index] = HashTableEntry(key, value)
+            self.__size += 1
+            return
+
+        while entry.key != key and entry.next is not None:
+            entry = entry.next
+
+        if entry.key == key:
+            entry.value = value
+        else:
+            entry.next = HashTableEntry(key, value)
+            self.__size += 1
+
+
+    def __delitem__(self, key):
+        """
+        """
+        index = self.hash_index(key)
+        entry = self.__table[index]
+
+        if entry is None:
+            raise ValueError(f"{key}")
+
+        if entry.key == key:
+            self.__table[index] = self.__table[index].next
+            self.__size -= 1
+            return
+
+        prev, entry = entry, entry.next
+        while entry is not None and entry.key != key:
+            prev, entry = entry, entry.next
+
+        if entry is None:
+            raise ValueError(f"{key}")
+
+        prev.next = entry.next
+        self.__size -= 1
+
+
+    def keys(self):
+        """
+        Returns a list of the keys in the hashtable.
+        """
+        res = []
+        for entry in self.__table:
+            while entry is not None:
+                res.append(entry.key)
+                entry = entry.next
+        return res
+
+
+    def values(self):
+        """
+        Returns a list of the values in the hashtable.
+        """
+        res = []
+        for entry in self.__table:
+            while entry is not None:
+                res.append(entry.value)
+                entry = entry.next
+        return res
+
+
+    def items(self):
+        """
+        Returns a list of tuples of the keys and values in the hashtable.
+        """
+        res = []
+        for entry in self.__table:
+            while entry is not None:
+                res.append((entry.key, entry.value))
+                entry = entry.next
+        return res
+
+
+
     def put(self, key, value):
         """
         Store the value with the given key.
@@ -95,6 +202,7 @@ class HashTable:
         i = self.hash_index(key)
         if self.__table[i] is None:
             self.__table[i] = HashTableEntry(key, value)
+            self.__size += 1
         else:
             curr = self.__table[i]
             # iterate through the linked list until we either find the existing
@@ -107,6 +215,7 @@ class HashTable:
             # append the value to the linked list
             else:
                 curr.next = HashTableEntry(key, value)
+                self.__size += 1
 
 
     def delete(self, key):
@@ -133,6 +242,7 @@ class HashTable:
             print("Key not found")
             return
 
+        self.__size -= 1
         prev.next = curr.next
 
     def get(self, key):
